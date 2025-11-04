@@ -11,3 +11,9 @@ Aplicar conceitos de segurança em um lab prático demonstrando a aplicação do
 
 ## Add more
 [Conectar o wazuh com opensearch]<https://documentation.wazuh.com/current/integrations-guide/opensearch/index.html>
+
+
+## to be continued
+[link to add git]<https://documentation.wazuh.com/current/deployment-options/docker/wazuh-container.html#single-node-stack>
+
+devemos adicionar esse conteudo a pasta local e fazer o include dele no docker file
