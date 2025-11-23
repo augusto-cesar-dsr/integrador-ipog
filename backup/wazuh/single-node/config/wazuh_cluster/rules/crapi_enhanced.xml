@@ -1,0 +1,47 @@
+<group name="crapi,web,application">
+
+  <!-- CR-API SQL Injection Enhanced -->
+  <rule id="100001" level="12">
+    <match>OR 1=1|union select|drop table|insert into|delete from|' or |" or |select.*from|update.*set</match>
+    <description>CR-API: SQL Injection attempt detected</description>
+    <group>sql_injection,crapi,attack</group>
+    <options>no_email_alert</options>
+  </rule>
+
+  <!-- CR-API XSS Enhanced -->
+  <rule id="100002" level="10">
+    <match>script>|javascript:|alert\(|document\.cookie|eval\(|innerHTML|onload=|onerror=</match>
+    <description>CR-API: XSS attempt detected</description>
+    <group>xss,crapi,attack</group>
+    <options>no_email_alert</options>
+  </rule>
+
+  <!-- CR-API Authentication Failure -->
+  <rule id="100003" level="7">
+    <match>Invalid Credentials|authentication failed|login failed|unauthorized|access denied</match>
+    <description>CR-API: Authentication failure</description>
+    <group>authentication_failed,crapi</group>
+  </rule>
+
+  <!-- CR-API Path Traversal -->
+  <rule id="100005" level="10">
+    <match>\.\./|\.\.\\|/etc/passwd|/etc/shadow|\.\.%2f|\.\.%5c</match>
+    <description>CR-API: Path traversal attempt detected</description>
+    <group>path_traversal,crapi,attack</group>
+  </rule>
+
+  <!-- CR-API Command Injection -->
+  <rule id="100006" level="12">
+    <match>; cat |; ls |; id |; whoami |; pwd |`cat |`ls |`id |$(cat |$(ls |$(id</match>
+    <description>CR-API: Command injection attempt detected</description>
+    <group>command_injection,crapi,attack</group>
+  </rule>
+
+  <!-- CR-API Rate Limiting Abuse -->
+  <rule id="100007" level="8" frequency="10" timeframe="60">
+    <if_matched_sid>100003</if_matched_sid>
+    <description>CR-API: Multiple authentication failures - possible brute force</description>
+    <group>brute_force,crapi,attack</group>
+  </rule>
+
+</group>

@@ -5,18 +5,12 @@ filebeat.inputs:
   processors:
     - add_docker_metadata:
         host: "unix:///var/run/docker.sock"
-    - decode_json_fields:
-        fields: ["message"]
-        target: ""
-        overwrite_keys: true
 
-output.logstash:
-  hosts: ["logstash:5044"]
+output.elasticsearch:
+  hosts: ["opensearch:9200"]
+  allow_older_versions: true
+
+setup.ilm.enabled: false
+setup.template.enabled: false
 
 logging.level: info
-logging.to_files: true
-logging.files:
-  path: /var/log/filebeat
-  name: filebeat
-  keepfiles: 7
-  permissions: 0644

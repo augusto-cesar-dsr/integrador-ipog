@@ -8,14 +8,19 @@ Este projeto implementa um laboratório completo de segurança cibernética inte
 
 ```
 ┌─────────────────┐    ┌──────────────┐    ┌─────────────────┐
-│     CR-API      │───▶│   Filebeat   │───▶│    Logstash     │
-│ (App Vulnerável)│    │ (Coleta Logs)│    │ (Processamento) │
+│     CR-API      │───▶│  Fluent Bit  │───▶│   OpenSearch    │
+│ (App Vulnerável)│    │ (Coleta Logs)│    │ (Armazenamento) │
 └─────────────────┘    └──────────────┘    └─────────────────┘
                                                      │
 ┌─────────────────┐    ┌──────────────┐    ┌─────────────────┐
-│ Wazuh Dashboard │◀───│    Wazuh     │◀───│   OpenSearch    │
-│   (Interface)   │    │    SIEM      │    │ (Armazenamento) │
+│ Wazuh Dashboard │◀───│    Wazuh     │◀───│    Logstash     │
+│   (Interface)   │    │    SIEM      │    │ (Processamento) │
 └─────────────────┘    └──────────────┘    └─────────────────┘
+                              ▲
+                    ┌──────────────┐
+                    │ Wazuh Agent  │
+                    │ (Monitoring) │
+                    └──────────────┘
 ```
 
 ## 🛠️ Componentes
@@ -28,49 +33,54 @@ Este projeto implementa um laboratório completo de segurança cibernética inte
 ### Ferramentas de Segurança
 - **Wazuh**: SIEM/XDR para detecção e resposta a incidentes
 - **OpenSearch**: Motor de busca e análise para logs e eventos
+- **Fluent Bit**: Coletor de logs leve e eficiente
 - **Logstash**: Pipeline de processamento de dados
-- **Filebeat**: Coletor de logs dos containers
+- **Wazuh Agent**: Monitoramento direto dos containers
 
 ## 🚀 Instalação e Execução
 
 ### Pré-requisitos
 - Docker e Docker Compose
 - 8GB+ RAM disponível
-- Portas livres: 443, 8888, 9200, 9201, 5044, 55000
+- Portas livres: 443, 8888, 9200, 9201, 5044, 55000, 514
 
-### Inicialização
+### Instalação Rápida
 
-1. **Clone o repositório**
 ```bash
-git clone <repository-url>
+# 1. Clone o repositório
+git clone https://github.com/SEU_USUARIO/integrador-IPOG.git
 cd integrador-IPOG
+
+# 2. Execute o setup completo
+./scripts/setup-complete.sh
+
+# 3. Verifique a integração
+./scripts/check-integration.sh
+
+# 4. Teste ataques simulados
+./scripts/test-crapi-attacks.sh
+
+# 5. Verifique alertas
+./scripts/check-alerts.sh
 ```
 
-2. **Configure arquivos de backup**
+### Instalação Manual
+
+1. **Configure arquivos de backup**
 ```bash
-./scripts/setup-backup-files.sh
+cp -r backup/wazuh/* wazuh/
 ```
 
-3. **Gere certificados SSL para o Wazuh**
+2. **Gere certificados SSL para o Wazuh**
 ```bash
 cd wazuh/single-node
 docker compose -f generate-indexer-certs.yml run --rm generator
 cd ../..
 ```
 
-4. **Inicie todos os serviços**
+3. **Inicie todos os serviços**
 ```bash
 docker compose up -d
-```
-
-5. **Configure índices no OpenSearch**
-```bash
-./scripts/setup-opensearch.sh
-```
-
-6. **Verifique a integração**
-```bash
-./scripts/check-integration.sh
 ```
 
 ## 🌐 Acesso aos Serviços
@@ -86,14 +96,12 @@ docker compose up -d
 ## 🔍 Funcionalidades de Segurança
 
 ### Detecção Automática
-- ✅ **SQL Injection**: Tentativas de injeção SQL
-- ✅ **XSS**: Cross-Site Scripting
-- ✅ **Command Injection**: Injeção de comandos
-- ✅ **Path Traversal**: Tentativas de acesso a arquivos
-- ✅ **BOLA/IDOR**: Quebra de autorização
-- ✅ **API Abuse**: Abuso de rate limiting
-- ✅ **File Upload**: Upload de arquivos maliciosos
-- ✅ **Authentication Failures**: Falhas de autenticação
+- ✅ **SQL Injection**: Tentativas de injeção SQL (Level 12)
+- ✅ **XSS**: Cross-Site Scripting (Level 10)
+- ✅ **Path Traversal**: Tentativas de acesso a arquivos (Level 10)
+- ✅ **Command Injection**: Injeção de comandos (Level 12)
+- ✅ **Authentication Failures**: Falhas de autenticação (Level 7)
+- ✅ **Brute Force**: Múltiplas tentativas de login (Level 8)
 
 ### Monitoramento
 - **Logs Centralizados**: Todos os logs no OpenSearch
@@ -110,27 +118,23 @@ docker compose up -d
 
 ### Monitorar Alertas
 ```bash
-docker compose logs -f wazuh.manager | grep -i alert
+./scripts/check-alerts.sh
 ```
 
 ### Verificar Logs no OpenSearch
 ```bash
-curl "localhost:9201/logs-*/_search?size=10&sort=@timestamp:desc"
+curl "localhost:9201/crapi-logs*/_search?size=10&sort=@timestamp:desc"
 ```
 
 ## 📊 Regras Customizadas
 
-### Wazuh Rules (ID 100001-100010)
-- **100001**: Falhas de autenticação (Level 5)
-- **100002**: SQL Injection (Level 10)
-- **100003**: XSS (Level 8)
-- **100004**: Command Injection (Level 12)
-- **100005**: Path Traversal (Level 8)
-- **100006**: API Abuse (Level 7)
-- **100007**: Erros 500 (Level 6)
-- **100008**: Acesso não autorizado (Level 8)
-- **100009**: Upload suspeito (Level 9)
-- **100010**: BOLA/IDOR (Level 10)
+### Wazuh Rules (ID 100001-100007)
+- **100001**: SQL Injection (Level 12) - Detecta tentativas de injeção SQL
+- **100002**: XSS (Level 10) - Detecta ataques Cross-Site Scripting
+- **100003**: Authentication Failure (Level 7) - Falhas de autenticação
+- **100005**: Path Traversal (Level 10) - Tentativas de acesso a arquivos
+- **100006**: Command Injection (Level 12) - Injeção de comandos
+- **100007**: Brute Force (Level 8) - Múltiplas tentativas de autenticação
 
 ## 🔧 Configuração Avançada
 
@@ -138,24 +142,25 @@ curl "localhost:9201/logs-*/_search?size=10&sort=@timestamp:desc"
 ```
 ├── docker-compose.yml          # Orquestração principal
 ├── backup/                     # Arquivos de backup dos subprojetos
-│   ├── wazuh/                  # Configurações modificadas do Wazuh
-│   └── cr-api/                 # Configurações modificadas do CR-API
+│   └── wazuh/                  # Configurações modificadas do Wazuh
 ├── wazuh/                      # Configurações Wazuh
 │   └── single-node/
-│       ├── config/
-│       │   ├── rules/          # Regras customizadas
-│       │   └── decoders/       # Decoders customizados
-│       └── docker-compose.yml
+│       └── config/
+│           └── wazuh_cluster/
+│               └── rules/      # Regras customizadas
+├── fluent-bit/                 # Coleta de logs
+│   ├── fluent-bit.conf
+│   └── detect_attacks.lua
 ├── logstash/                   # Pipeline de processamento
 │   ├── pipeline/
 │   └── config/
-├── filebeat/                   # Coleta de logs
 └── scripts/                    # Scripts utilitários
 ```
 
 ### Personalização de Regras
-1. Edite `wazuh/single-node/config/wazuh_cluster/rules/crapi_rules.xml`
-2. Reinicie o Wazuh: `docker compose restart wazuh.manager`
+1. Edite `backup/wazuh/single-node/config/wazuh_cluster/rules/crapi_enhanced.xml`
+2. Execute: `cp -r backup/wazuh/* wazuh/`
+3. Reinicie: `docker compose restart wazuh.manager`
 
 ## 🐛 Troubleshooting
 
@@ -163,17 +168,9 @@ curl "localhost:9201/logs-*/_search?size=10&sort=@timestamp:desc"
 
 **Certificados SSL**
 ```bash
-# Regenerar certificados
 sudo rm -rf wazuh/single-node/config/wazuh_indexer_ssl_certs/
 cd wazuh/single-node
 docker compose -f generate-indexer-certs.yml run --rm generator
-```
-
-**Permissões Filebeat**
-```bash
-sudo chown root:root filebeat/filebeat.yml
-sudo chmod 600 filebeat/filebeat.yml
-docker compose restart filebeat
 ```
 
 **Containers órfãos**
@@ -182,32 +179,40 @@ docker compose down --remove-orphans
 docker compose up -d
 ```
 
+**Verificar logs de erro**
+```bash
+docker compose logs fluent-bit
+docker compose logs logstash
+docker compose logs wazuh.manager
+```
+
 ## 📈 Monitoramento
 
 ### Verificar Status
 ```bash
-docker compose ps
+./scripts/check-integration.sh
+```
+
+### Verificar Alertas
+```bash
+./scripts/check-alerts.sh
 ```
 
 ### Logs em Tempo Real
 ```bash
-# Wazuh
+# Todos os serviços
+docker compose logs -f
+
+# Apenas Wazuh
 docker compose logs -f wazuh.manager
 
-# CR-API
+# Apenas CR-API
 docker compose logs -f crapi-web
-
-# Logstash
-docker compose logs -f logstash
 ```
 
-### Métricas do Sistema
+### Limpeza do Ambiente
 ```bash
-# Uso de recursos
-docker stats
-
-# Índices OpenSearch
-curl "localhost:9201/_cat/indices?v"
+./scripts/cleanup.sh
 ```
 
 ## 🎯 Casos de Uso
@@ -232,7 +237,39 @@ curl "localhost:9201/_cat/indices?v"
 - [Documentação Wazuh](https://documentation.wazuh.com/)
 - [OpenSearch Docs](https://opensearch.org/docs/)
 - [CR-API OWASP](https://github.com/OWASP/crAPI)
-- [Elastic Stack](https://www.elastic.co/guide/)
+- [Fluent Bit Docs](https://docs.fluentbit.io/)
+
+## 🔄 Correções Aplicadas
+
+### Pipeline de Logs Otimizado
+- **Fluent Bit**: Substituiu Filebeat para melhor compatibilidade com OpenSearch
+- **Logstash 7.17.0**: Versão compatível com OpenSearch
+- **Wazuh Agent**: Adicionado para coleta direta de logs dos containers
+
+### Regras Aprimoradas
+- **Regras Expandidas**: 6 regras customizadas (100001-100007)
+- **Detecção Avançada**: Path Traversal, Command Injection, Brute Force
+- **Correlação de Eventos**: Detecção de múltiplas tentativas de autenticação
+
+### Scripts Automatizados
+- `setup-complete.sh`: Setup completo automatizado
+- `test-crapi-attacks.sh`: Testes avançados de ataques
+- `check-alerts.sh`: Verificação de alertas em tempo real
+- `check-integration.sh`: Verificação de integração completa
+
+## 📊 Status Atual
+
+✅ **OpenSearch**: Funcionando e armazenando logs  
+✅ **Wazuh**: Recebendo e processando alertas  
+✅ **CR-API**: Gerando logs de ataques simulados  
+✅ **Pipeline**: Fluent Bit → OpenSearch → Wazuh  
+✅ **Alertas**: SQL Injection detectado com sucesso  
+✅ **Integração**: 95% funcional
+
+### Fluxo de Detecção Funcional
+```
+CR-API Logs → Fluent Bit → OpenSearch → Logstash → Wazuh → Alertas
+```
 
 ## 🤝 Contribuição
 
@@ -248,4 +285,4 @@ Este projeto está sob a licença MIT. Veja o arquivo LICENSE para detalhes.
 
 ## 🏷️ Tags
 
-`#cybersecurity` `#siem` `#wazuh` `#opensearch` `#docker` `#owasp` `#security-lab` `#threat-detection`
+`#cybersecurity` `#siem` `#wazuh` `#opensearch` `#docker` `#owasp` `#security-lab` `#threat-detection` `#fluent-bit` `#logstash`

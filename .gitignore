@@ -1,0 +1,22 @@
+# Docker volumes e dados
+opensearch_data/
+wazuh/single-node/config/wazuh_indexer_ssl_certs/
+*.log
+
+# Arquivos temporários
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Credenciais e configurações sensíveis
+.env
+*.key
+*.pem
+*.crt
+
+# Logs
+logs/
+*.log
+
+# Cache
+.cache/

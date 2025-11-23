@@ -1,0 +1,31 @@
+<group name="crapi,web,application">
+
+  <!-- CR-API SQL Injection -->
+  <rule id="100001" level="10">
+    <match>OR 1=1|union select|drop table|insert into</match>
+    <description>CR-API: SQL Injection attempt detected</description>
+    <group>sql_injection,crapi,attack</group>
+  </rule>
+
+  <!-- CR-API XSS -->
+  <rule id="100002" level="8">
+    <match>script>|javascript:|alert(|document.cookie</match>
+    <description>CR-API: XSS attempt detected</description>
+    <group>xss,crapi,attack</group>
+  </rule>
+
+  <!-- CR-API Authentication Failure -->
+  <rule id="100003" level="5">
+    <match>Invalid Credentials|authentication failed|login failed</match>
+    <description>CR-API: Authentication failure</description>
+    <group>authentication_failed,crapi</group>
+  </rule>
+
+  <!-- CR-API Error 500 -->
+  <rule id="100004" level="6">
+    <match>500|internal server error|exception</match>
+    <description>CR-API: Internal server error</description>
+    <group>server_error,crapi</group>
+  </rule>
+
+</group>

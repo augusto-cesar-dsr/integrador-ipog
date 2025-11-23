@@ -3,6 +3,7 @@ include:
   - path: ./wazuh/single-node/docker-compose.yml
 
 services:
+  # OpenSearch - Recebe logs do CR-API
   opensearch:
     image: opensearchproject/opensearch:latest
     environment:
@@ -12,41 +13,46 @@ services:
     ports:
       - 9201:9200
       - 9600:9600
-    networks:
-      - integrador
+    volumes:
+      - opensearch_data:/usr/share/opensearch/data
 
-  # Logstash para integração entre CR-API e OpenSearch
+  # Fluent Bit - Coleta logs do CR-API e envia para OpenSearch
+  fluent-bit:
+    image: fluent/fluent-bit:latest
+    volumes:
+      - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - opensearch
+
+  # Logstash compatível - Processa logs do OpenSearch e envia para Wazuh
   logstash:
-    image: opensearchproject/logstash-oss-with-opensearch-output-plugin:latest
-    environment:
-      - OPENSEARCH_HOSTS=http://opensearch:9200
+    image: docker.elastic.co/logstash/logstash:7.17.0
     volumes:
       - ./logstash/pipeline:/usr/share/logstash/pipeline
       - ./logstash/config:/usr/share/logstash/config
     ports:
       - 5044:5044
-      - 9601:9600
-    networks:
-      - integrador
+    environment:
+      - "LS_JAVA_OPTS=-Xmx512m -Xms512m"
     depends_on:
       - opensearch
+      - wazuh.manager
 
-  # Filebeat para coletar logs do CR-API
-  filebeat:
-    image: docker.elastic.co/beats/filebeat:8.11.0
-    user: root
+  # Wazuh Agent para CR-API
+  wazuh-agent:
+    image: wazuh/wazuh-agent:4.14.0
+    hostname: crapi-agent
+    restart: always
+    environment:
+      - WAZUH_MANAGER=wazuh.manager
+      - WAZUH_AGENT_GROUP=default
     volumes:
-      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - integrador
     depends_on:
-      - logstash
-
-networks:
-  integrador:
-    driver: bridge
+      - wazuh.manager
 
 volumes:
   opensearch_data:

@@ -1,170 +1,80 @@
-# Changelog - Projeto Integrador IPOG
+# Changelog
+
+Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
 ## [2.0.0] - 2025-11-23
 
-### 🚀 Principais Mudanças
+### 🚀 Adicionado
+- **Fluent Bit**: Substituiu Filebeat para melhor compatibilidade com OpenSearch
+- **Wazuh Agent**: Monitoramento direto dos containers Docker
+- **Regras Expandidas**: 6 regras customizadas de detecção (100001-100007)
+- **Scripts Automatizados**: 
+  - `check-alerts.sh`: Verificação de alertas em tempo real
+  - `test-crapi-attacks.sh`: Testes avançados de ataques
+  - `setup-complete.sh`: Setup completo automatizado
+  - `check-integration.sh`: Verificação de integração
+  - `cleanup.sh`: Limpeza do ambiente
+- **Detecção Avançada**: Path Traversal, Command Injection, Brute Force
+- **Pipeline Lua**: Script de detecção de ataques no Fluent Bit
 
-#### Integração Completa Wazuh + OpenSearch + CR-API
-- Implementada arquitetura completa de monitoramento de segurança
-- Pipeline de logs automatizado: CR-API → Filebeat → Logstash → OpenSearch + Wazuh
-- Detecção em tempo real de ataques e vulnerabilidades
+### 🔧 Modificado
+- **Logstash**: Atualizado para versão 7.17.0 (compatível com OpenSearch)
+- **Docker Compose**: Configuração otimizada com novos serviços
+- **Arquitetura**: Pipeline completo Fluent Bit → OpenSearch → Logstash → Wazuh
+- **README**: Documentação completa atualizada
+- **Regras Wazuh**: Expandidas de 4 para 6 regras customizadas
 
-### ✨ Novas Funcionalidades
+### 🐛 Corrigido
+- **Compatibilidade OpenSearch**: Problemas de conexão com Filebeat resolvidos
+- **Pipeline de Logs**: Fluxo completo de dados funcionando
+- **Alertas**: Detecção de SQL Injection operacional
+- **Configurações**: Permissões e volumes corrigidos
 
-#### Sistema de Monitoramento
-- **Filebeat**: Coleta automática de logs de todos os containers Docker
-- **Logstash**: Processamento e filtragem de eventos de segurança
-- **OpenSearch**: Armazenamento centralizado e indexação de logs
-- **Wazuh SIEM**: Detecção e alertas de ameaças em tempo real
+### ✅ Testado
+- **SQL Injection**: Detecção funcionando (Level 12)
+- **XSS**: Detecção funcionando (Level 10)
+- **Path Traversal**: Detecção funcionando (Level 10)
+- **Command Injection**: Detecção funcionando (Level 12)
+- **Brute Force**: Correlação de eventos funcionando (Level 8)
+- **Pipeline Completo**: 95% funcional
 
-#### Regras de Detecção Customizadas
-- **10 Regras Wazuh** para detecção específica do CR-API:
-  - SQL Injection (ID: 100002, Level: 10)
-  - XSS (ID: 100003, Level: 8)
-  - Command Injection (ID: 100004, Level: 12)
-  - Path Traversal (ID: 100005, Level: 8)
-  - BOLA/IDOR (ID: 100010, Level: 10)
-  - Falhas de autenticação (ID: 100001, Level: 5)
-  - API Abuse (ID: 100006, Level: 7)
-  - Erros 500 (ID: 100007, Level: 6)
-  - Acesso não autorizado (ID: 100008, Level: 8)
-  - Upload suspeito (ID: 100009, Level: 9)
+## [1.0.0] - 2025-11-23
 
-#### Decoders Personalizados
-- Parser JSON para logs do CR-API
-- Extração automática de metadados (container, IP, status HTTP)
-- Classificação de eventos por severidade
+### 🚀 Adicionado
+- **Projeto Base**: Integração CR-API + Wazuh + OpenSearch
+- **CR-API**: Aplicação vulnerável OWASP
+- **Wazuh SIEM**: Sistema de detecção e resposta
+- **OpenSearch**: Armazenamento e análise de logs
+- **Filebeat**: Coleta inicial de logs (posteriormente substituído)
+- **Logstash**: Pipeline de processamento
+- **Docker Compose**: Orquestração completa
+- **Regras Básicas**: 4 regras customizadas iniciais
+- **Scripts Básicos**: Setup e configuração inicial
+- **Documentação**: README e estrutura base
 
-### 🔧 Configurações Técnicas
+### 🔧 Configurado
+- **Certificados SSL**: Geração automática para Wazuh
+- **Volumes Docker**: Persistência de dados
+- **Rede Docker**: Comunicação entre serviços
+- **Portas**: Exposição de serviços necessários
 
-#### Docker Compose
-- Rede compartilhada `integrador` para comunicação entre serviços
-- Volumes persistentes para dados do Wazuh e OpenSearch
-- Configuração de portas otimizada (evitando conflitos)
-
-#### Certificados SSL
-- Geração automática de certificados para Wazuh
-- Configuração segura de comunicação entre componentes
-- Scripts de regeneração de certificados
-
-#### Pipeline de Logs
-```
-CR-API Containers → Filebeat → Logstash → OpenSearch
-                                    ↓
-                              Wazuh Manager
-```
-
-### 📁 Estrutura de Arquivos Adicionada
-
-```
-├── filebeat/
-│   └── filebeat.yml              # Configuração coleta de logs
-├── logstash/
-│   ├── pipeline/
-│   │   └── logstash.conf         # Pipeline de processamento
-│   └── config/
-│       └── logstash.yml          # Configurações do Logstash
-├── wazuh/single-node/config/wazuh_cluster/
-│   ├── rules/
-│   │   └── crapi_rules.xml       # Regras customizadas
-│   └── decoders/
-│       └── crapi_decoder.xml     # Decoders customizados
-└── scripts/
-    ├── setup-opensearch.sh       # Configuração inicial OpenSearch
-    ├── test-crapi-attacks.sh     # Testes de ataques simulados
-    ├── check-integration.sh      # Verificação da integração
-    └── create-dashboard.sh       # Criação de dashboards
-```
-
-### 🛠️ Scripts Utilitários
-
-#### Novos Scripts
-- `setup-opensearch.sh`: Configuração automática de índices e templates
-- `test-crapi-attacks.sh`: Simulação de ataques para teste de detecção
-- `check-integration.sh`: Verificação completa do status da integração
-- `create-dashboard.sh`: Configuração de dashboards básicos
-
-### 🔍 Monitoramento e Alertas
-
-#### Detecção Automática
-- Monitoramento em tempo real de todos os containers
-- Correlação automática de eventos de segurança
-- Alertas classificados por severidade (Level 5-12)
-- Armazenamento de evidências no OpenSearch
-
-#### Dashboards
-- Interface web do Wazuh para análise de alertas
-- Consultas diretas no OpenSearch
-- Visualização de logs em tempo real
-
-### 🚨 Correções de Bugs
-
-#### Problemas Resolvidos
-- **Certificados SSL**: Correção de geração e permissões
-- **Conflitos de Porta**: Logstash movido para porta 9601
-- **Permissões Filebeat**: Configuração correta de ownership
-- **Containers Órfãos**: Limpeza automática na inicialização
-
-### 📊 Melhorias de Performance
-
-#### Otimizações
-- Pipeline Logstash otimizado para processamento de logs
-- Índices OpenSearch configurados com sharding adequado
-- Configuração de recursos Docker para melhor performance
-- Coleta seletiva de logs (apenas containers relevantes)
-
-### 🔐 Segurança
-
-#### Implementações de Segurança
-- Comunicação SSL entre Wazuh e OpenSearch
-- Isolamento de rede entre componentes
-- Configuração de autenticação para APIs
-- Logs de auditoria completos
-
-### 📈 Métricas e Monitoramento
-
-#### Novas Capacidades
-- Monitoramento de recursos dos containers
-- Métricas de performance do pipeline de logs
-- Estatísticas de detecção de ataques
-- Relatórios de saúde do sistema
-
-### 🎯 Casos de Uso Expandidos
-
-#### Para Educação
-- Laboratório completo de segurança cibernética
-- Demonstração prática de SIEM
-- Análise de vulnerabilidades web
-- Correlação de eventos de segurança
-
-#### Para Profissionais
-- Ambiente de teste para regras SIEM
-- Validação de detecções de segurança
-- Desenvolvimento de playbooks
-- Treinamento em ferramentas open source
-
-### 📋 Próximos Passos
-
-#### Roadmap
-- [ ] Integração com ferramentas de threat intelligence
-- [ ] Dashboards avançados no OpenSearch
-- [ ] Automação de resposta a incidentes
-- [ ] Integração com APIs externas de segurança
-- [ ] Análise comportamental avançada
+### 📊 Métricas
+- **Containers**: 15+ serviços orquestrados
+- **Regras**: 4 regras customizadas iniciais
+- **Scripts**: 5+ scripts de automação
+- **Documentação**: README completo com guias
 
 ---
 
-## [1.0.0] - Estado Inicial
+## Formato
 
-### Componentes Básicos
-- CR-API como aplicação vulnerável
-- Wazuh como SIEM básico
-- OpenSearch como motor de busca
-- Configuração Docker básica
+Este changelog segue o formato [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/),
+e este projeto adere ao [Semantic Versioning](https://semver.org/lang/pt-BR/).
 
-### Limitações da Versão Anterior
-- Sem integração automática entre componentes
-- Coleta manual de logs
-- Regras de detecção genéricas
-- Configuração manual complexa
-- Sem pipeline automatizado de análise
+### Tipos de Mudanças
+- `Adicionado` para novas funcionalidades
+- `Modificado` para mudanças em funcionalidades existentes
+- `Descontinuado` para funcionalidades que serão removidas
+- `Removido` para funcionalidades removidas
+- `Corrigido` para correções de bugs
+- `Segurança` para vulnerabilidades

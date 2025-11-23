@@ -1,45 +1,51 @@
 #!/bin/bash
 
-echo "Testando ataques no CR-API para verificar detecção do Wazuh..."
+echo "=== Testando Ataques Avançados no CR-API ==="
 
-CRAPI_URL="http://localhost:8888"
+BASE_URL="http://localhost:8888"
 
 echo "1. Testando SQL Injection..."
-curl -s "$CRAPI_URL/identity/api/auth/login" \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@example.com'\'' OR 1=1--","password":"test"}' > /dev/null
+curl -s "$BASE_URL/identity/api/auth/login" \
+  -d '{"email":"admin@example.com OR 1=1 --","password":"test"}' \
+  -H "Content-Type: application/json" > /dev/null
+
+curl -s "$BASE_URL/identity/api/auth/login" \
+  -d '{"email":"admin@example.com\"; DROP TABLE users; --","password":"test"}' \
+  -H "Content-Type: application/json" > /dev/null
 
 echo "2. Testando XSS..."
-curl -s "$CRAPI_URL/community/api/v2/community/posts" \
-  -H "Content-Type: application/json" \
-  -d '{"title":"<script>alert(\"XSS\")</script>","content":"test"}' > /dev/null
+curl -s "$BASE_URL/identity/api/auth/login" \
+  -d '{"email":"<script>alert(\"XSS\")</script>","password":"test"}' \
+  -H "Content-Type: application/json" > /dev/null
+
+curl -s "$BASE_URL/identity/api/auth/login" \
+  -d '{"email":"javascript:alert(document.cookie)","password":"test"}' \
+  -H "Content-Type: application/json" > /dev/null
 
 echo "3. Testando Path Traversal..."
-curl -s "$CRAPI_URL/workshop/api/shop/products/../../../etc/passwd" > /dev/null
+curl -s "$BASE_URL/../../../etc/passwd" > /dev/null
+curl -s "$BASE_URL/identity/api/auth/../../etc/shadow" > /dev/null
 
 echo "4. Testando Command Injection..."
-curl -s "$CRAPI_URL/workshop/api/mechanic/receive_report" \
-  -H "Content-Type: application/json" \
-  -d '{"report_link":"http://example.com; cat /etc/passwd"}' > /dev/null
+curl -s "$BASE_URL/identity/api/auth/login" \
+  -d '{"email":"test@example.com; cat /etc/passwd","password":"test"}' \
+  -H "Content-Type: application/json" > /dev/null
 
-echo "5. Testando acesso não autorizado..."
-curl -s "$CRAPI_URL/identity/api/v2/user/dashboard" \
-  -H "Authorization: Bearer invalid_token" > /dev/null
+echo "5. Testando Brute Force (10 tentativas)..."
+for i in {1..10}; do
+  curl -s "$BASE_URL/identity/api/auth/login" \
+    -d '{"email":"admin@example.com","password":"wrongpass'$i'"}' \
+    -H "Content-Type: application/json" > /dev/null
+  sleep 1
+done
 
-echo "6. Gerando erro 500..."
-curl -s "$CRAPI_URL/workshop/api/shop/orders/999999999" > /dev/null
-
-echo ""
-echo "Ataques simulados enviados. Verificando alertas do Wazuh..."
-sleep 5
-
-echo ""
-echo "Verificando logs do Wazuh:"
-docker compose logs --tail=20 wazuh.manager | grep -i "alert\|rule\|crapi" || echo "Nenhum alerta encontrado ainda..."
+echo "6. Aguardando processamento..."
+sleep 15
 
 echo ""
-echo "Verificando índices no OpenSearch:"
-curl -s "localhost:9201/_cat/indices?v" | grep logs
-
-echo ""
-echo "Teste concluído. Verifique o Wazuh Dashboard em https://localhost"
+echo "✅ Ataques avançados simulados!"
+echo "📊 Monitore os alertas:"
+echo "   - Wazuh: docker compose logs -f wazuh.manager"
+echo "   - Fluent Bit: docker compose logs -f fluent-bit"
+echo "   - OpenSearch: curl localhost:9201/crapi-logs*/_search"
+echo "🌐 Acesse o Wazuh Dashboard: https://localhost"
