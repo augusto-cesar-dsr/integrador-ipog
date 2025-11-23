@@ -46,24 +46,29 @@ git clone <repository-url>
 cd integrador-IPOG
 ```
 
-2. **Gere certificados SSL para o Wazuh**
+2. **Configure arquivos de backup**
+```bash
+./scripts/setup-backup-files.sh
+```
+
+3. **Gere certificados SSL para o Wazuh**
 ```bash
 cd wazuh/single-node
 docker compose -f generate-indexer-certs.yml run --rm generator
 cd ../..
 ```
 
-3. **Inicie todos os serviços**
+4. **Inicie todos os serviços**
 ```bash
 docker compose up -d
 ```
 
-4. **Configure índices no OpenSearch**
+5. **Configure índices no OpenSearch**
 ```bash
 ./scripts/setup-opensearch.sh
 ```
 
-5. **Verifique a integração**
+6. **Verifique a integração**
 ```bash
 ./scripts/check-integration.sh
 ```
@@ -132,6 +137,9 @@ curl "localhost:9201/logs-*/_search?size=10&sort=@timestamp:desc"
 ### Estrutura de Arquivos
 ```
 ├── docker-compose.yml          # Orquestração principal
+├── backup/                     # Arquivos de backup dos subprojetos
+│   ├── wazuh/                  # Configurações modificadas do Wazuh
+│   └── cr-api/                 # Configurações modificadas do CR-API
 ├── wazuh/                      # Configurações Wazuh
 │   └── single-node/
 │       ├── config/

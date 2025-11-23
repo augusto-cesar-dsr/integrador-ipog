@@ -1,0 +1,32 @@
+<!--
+  CR-API Decoders for Wazuh
+-->
+
+<decoder name="crapi-json">
+  <program_name>crapi</program_name>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>
+
+<decoder name="crapi-container">
+  <parent>crapi-json</parent>
+  <regex>\"container\":\{\"name\":\"(crapi-\w+)\"</regex>
+  <order>container_name</order>
+</decoder>
+
+<decoder name="crapi-error">
+  <parent>crapi-json</parent>
+  <regex>\"level\":\"(ERROR|WARN|FATAL)\"</regex>
+  <order>log_level</order>
+</decoder>
+
+<decoder name="crapi-http">
+  <parent>crapi-json</parent>
+  <regex>\"status\":(\d{3})</regex>
+  <order>http_status</order>
+</decoder>
+
+<decoder name="crapi-ip">
+  <parent>crapi-json</parent>
+  <regex>\"remote_addr\":\"(\d+\.\d+\.\d+\.\d+)\"</regex>
+  <order>src_ip</order>
+</decoder>
