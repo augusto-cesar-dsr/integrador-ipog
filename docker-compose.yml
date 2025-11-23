@@ -1,23 +1,52 @@
-version: '3.8'
-# include:
-#   - path: ./cr-api/deploy/docker/docker-compose.yml
+include:
+  - path: ./cr-api/deploy/docker/docker-compose.yml
+  - path: ./wazuh/single-node/docker-compose.yml
 
 services:
-  wazuh:
-    image: wazuh/wazuh-indexer:4.14.0
+  opensearch:
+    image: opensearchproject/opensearch:latest
+    environment:
+      - discovery.type=single-node
+      - DISABLE_SECURITY_PLUGIN=true
+      - OPENSEARCH_INITIAL_ADMIN_PASSWORD=admin
     ports:
       - 9201:9200
+      - 9600:9600
+    networks:
+      - integrador
 
-  # opensearch:
-  #   image: opensearchproject/opensearch:latest
-  #   environment:
-  #    - discovery.type=single-node
-  #    - DISABLE_SECURITY_PLUGIN=true
-  #   ports:
-  #     - 9200:9200
-  #     - 9600:9600
+  # Logstash para integração entre CR-API e OpenSearch
+  logstash:
+    image: opensearchproject/logstash-oss-with-opensearch-output-plugin:latest
+    environment:
+      - OPENSEARCH_HOSTS=http://opensearch:9200
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./logstash/config:/usr/share/logstash/config
+    ports:
+      - 5044:5044
+      - 9601:9600
+    networks:
+      - integrador
+    depends_on:
+      - opensearch
 
-# networks:
-#     - integrador
-# volumes:
-  # db_data:
+  # Filebeat para coletar logs do CR-API
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.11.0
+    user: root
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - integrador
+    depends_on:
+      - logstash
+
+networks:
+  integrador:
+    driver: bridge
+
+volumes:
+  opensearch_data:
