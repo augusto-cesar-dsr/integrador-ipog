@@ -20,3 +20,15 @@ logs/
 
 # Cache
 .cache/
+
+# Arquivos de mídia desnecessários
+*.mp4
+*.mov
+*.avi
+
+# Repositórios Git dos subprojetos
+cr-api/.git/
+wazuh/.git/
+
+# Arquivos temporários de setup
+PUSH_INSTRUCTIONS.md
