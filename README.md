@@ -11,8 +11,8 @@ Este projeto implementa um laboratório completo de segurança cibernética inte
 │     CR-API      │───▶│  Fluent Bit  │───▶│   OpenSearch    │
 │ (App Vulnerável)│    │ (Coleta Logs)│    │ (Armazenamento) │
 └─────────────────┘    └──────────────┘    └─────────────────┘
-                              │                       │
-                              ▼                       │
+                              │                      │
+                              ▼                      │
 ┌─────────────────┐    ┌──────────────┐              │
 │ Wazuh Dashboard │◀───│ Wazuh Manager│◀─────────────┘
 │   (Interface)   │    │    (SIEM)    │
