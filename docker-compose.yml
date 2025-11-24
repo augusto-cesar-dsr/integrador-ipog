@@ -21,6 +21,7 @@ services:
     image: fluent/fluent-bit:latest
     volumes:
       - ./fluent-bit/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./fluent-bit/detect_attacks.lua:/fluent-bit/etc/detect_attacks.lua
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     depends_on:
